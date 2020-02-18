@@ -13,6 +13,8 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
+
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -24,7 +26,7 @@ db = SQLAlchemy(app)
 
 # TODO: connect to a local postgresql database
 migrate = Migrate(app,db) # making an instance of Migrate Class and link it to the app and DB
-app.config['SQLALCHEMY_DATABASE_URI'] ='postgresql://postgres:password@localhost:5432/fyyur'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #----------------------------------------------------------------------------#
@@ -416,11 +418,30 @@ def edit_venue_submission(venue_id):
 def create_artist_form():
   form = ArtistForm()
   return render_template('forms/new_artist.html', form=form)
-
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
+  try:
+    added_artist=Artist(name=form.name.date,
+    genres=form.genres.data,
+    city=form.city.data,
+    state=form.state.data,
+    phone=form.phone.data,
+    website=form.website.data,
+    facebook_link=form.facebook_link.data,
+    seeking_venue=form.seeking_venue.data,
+    seeking_description=form.seeking_description.data,
+    image_link=form.image_link.data
+    )
+    
+    db.session.add(added_artist)
+    db.session.commit()
+  except:
+    db.session.rollback()
+  finally:
+    db.session.close()
   # TODO: insert form data as a new Venue record in the db, instead
+
   # TODO: modify data to be the data object returned from db insertion
 
   # on successful db insert, flash success
