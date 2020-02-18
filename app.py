@@ -13,6 +13,8 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
+
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -24,46 +26,57 @@ db = SQLAlchemy(app)
 
 # TODO: connect to a local postgresql database
 migrate = Migrate(app,db) # making an instance of Migrate Class and link it to the app and DB
-app.config['SQLALCHEMY_DATABASE_URI'] ='postgresql://postgres:password@localhost:5432/fyyur'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
-
 class Venue(db.Model):
     __tablename__ = 'Venue'
-
+    __searchable__= ["name","city","state","address"]
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
+    name = db.Column(db.String, unique=True, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120),nullable=False)
+    address = db.Column(db.String(120),nullable=False)
+    phone = db.Column(db.String(120),nullable=False)
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    seeking_description = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean, default=False)
+    website = db.Column(db.String())
+    # the relationship between Show TAble and Venue TAble is one to many
+    shows_ven = db.relationship('Show', backref='venue')
+    past_shows_count = db.Column(db.Integer)
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    artists = db.relationship('Venue' , backref='venue' ,lazy=True)
-
-
 class Artist(db.Model):
     __tablename__ = 'Artist'
-
+    __searchable__= ["name","city","state"]
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    name = db.Column(db.String, unique=True, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120),nullable=False )  
+    phone = db.Column(db.String(120), nullable=False)
+    genres = db.Column(db.ARRAY(db.String), nullable=False)
     image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-
+    facebook_link = db.Column(db.String())
+    seeking_venue = db.Column(db.Boolean, default=False)
+    seeking_description = db.Column(db.String(200))
+    website = db.Column(db.String())
+    # the relationship between Show TAble and Artist TAble is one to many
+    shows_art = db.relationship('Show', backref='artist')
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    venue_id = db.Column(db.Integer , db.ForeignKey('Venue.id'), nullable=False)
-   
-
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+class Show(db.Model):
+  __tablename__='Show'
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), primary_key=True)
+  start_time = db.Column(db.String(), nullable=False)
 
+
+ 
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
@@ -416,11 +429,30 @@ def edit_venue_submission(venue_id):
 def create_artist_form():
   form = ArtistForm()
   return render_template('forms/new_artist.html', form=form)
-
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
+  try:
+    added_artist=Artist(name=form.name.date,
+    genres=form.genres.data,
+    city=form.city.data,
+    state=form.state.data,
+    phone=form.phone.data,
+    website=form.website.data,
+    facebook_link=form.facebook_link.data,
+    seeking_venue=form.seeking_venue.data,
+    seeking_description=form.seeking_description.data,
+    image_link=form.image_link.data
+    )
+    
+    db.session.add(added_artist)
+    db.session.commit()
+  except:
+    db.session.rollback()
+  finally:
+    db.session.close()
   # TODO: insert form data as a new Venue record in the db, instead
+
   # TODO: modify data to be the data object returned from db insertion
 
   # on successful db insert, flash success
