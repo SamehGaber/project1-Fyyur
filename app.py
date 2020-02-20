@@ -26,14 +26,14 @@ db = SQLAlchemy(app)
 
 # TODO: connect to a local postgresql database
 migrate = Migrate(app,db) # making an instance of Migrate Class and link it to the app and DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur1'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venue'
     __searchable__= ["name","city","state","address"]
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, nullable=False)
@@ -52,7 +52,7 @@ class Venue(db.Model):
     past_shows_count = db.Column(db.Integer)
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artist'
     __searchable__= ["name","city","state"]
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, nullable=False)
@@ -66,13 +66,13 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(200))
     website = db.Column(db.String())
     # the relationship between Show TAble and Artist TAble is one to many
-    shows_art = db.relationship('Show', backref='artist')
+    shows_art = db.relationship('show', backref='artist')
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
-  __tablename__='Show'
-  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
-  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), primary_key=True)
+  __tablename__='show'
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), primary_key=True)
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), primary_key=True)
   start_time = db.Column(db.String(), nullable=False)
 
 
@@ -433,7 +433,7 @@ def create_artist_form():
 def create_artist_submission():
   # called upon submitting the new artist listing form
   try:
-    added_artist=Artist(name=form.name.date,
+    added_artist=artist(name=form.name.date,
     genres=form.genres.data,
     city=form.city.data,
     state=form.state.data,
