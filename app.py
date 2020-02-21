@@ -26,14 +26,16 @@ db = SQLAlchemy(app)
 
 # TODO: connect to a local postgresql database
 migrate = Migrate(app,db) # making an instance of Migrate Class and link it to the app and DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur1'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+
 
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venue'
     __searchable__= ["name","city","state","address"]
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, nullable=False)
@@ -48,11 +50,11 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, default=False)
     website = db.Column(db.String())
     # the relationship between Show TAble and Venue TAble is one to many
-    shows_ven = db.relationship('Show', backref='venue')
+    shows_ven = db.relationship('show', backref='venue')
     past_shows_count = db.Column(db.Integer)
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artist'
     __searchable__= ["name","city","state"]
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, unique=True, nullable=False)
@@ -66,13 +68,13 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(200))
     website = db.Column(db.String())
     # the relationship between Show TAble and Artist TAble is one to many
-    shows_art = db.relationship('Show', backref='artist')
+    shows_art = db.relationship('show', backref='artist')
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
   __tablename__='Show'
-  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
-  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), primary_key=True)
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), primary_key=True)
   start_time = db.Column(db.String(), nullable=False)
 
 
@@ -107,6 +109,10 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+
+  # manipulating dummy data to db 
+  
+  #data2=Venue.query.get.all()
   data=[{
     "city": "San Francisco",
     "state": "CA",
@@ -128,7 +134,7 @@ def venues():
       "num_upcoming_shows": 0,
     }]
   }]
-  return render_template('pages/venues.html', areas=data);
+  return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -241,6 +247,24 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  form = VenueForm(request.form)
+  new_venue = Venue(
+      name=request.form['name'],
+      genres=request.form.getlist('genres'),
+      address=request.form['address'],
+      city=request.form['city'],
+      state=request.form['state'],
+      phone=request.form['phone'],
+      #website=request.form['website'],
+      facebook_link=request.form['facebook_link'],
+      #image_link=request.form['image_link'],
+      #seeking_talent=request.form['seeking_talent'],
+      #description=request.form['seeking_description'],
+    )
+    
+  db.session.add(new_venue)
+  db.session.commit()
+
 
   # on successful db insert, flash success
   flash('Venue ' + request.form['name'] + ' was successfully listed!')
