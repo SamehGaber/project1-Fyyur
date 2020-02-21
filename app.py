@@ -107,6 +107,8 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+  #data =Venue.query.order_by('id').all()
+  
   data=[{
     "city": "San Francisco",
     "state": "CA",
@@ -128,6 +130,7 @@ def venues():
       "num_upcoming_shows": 0,
     }]
   }]
+  
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
@@ -147,8 +150,10 @@ def search_venues():
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
+  #Venue.query.order_by('id').all()
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
+  '''
   data1={
     "id": 1,
     "name": "The Musical Hop",
@@ -228,7 +233,7 @@ def show_venue(venue_id):
   }
   data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
   return render_template('pages/show_venue.html', venue=data)
-
+'''
 #  Create Venue
 #  ----------------------------------------------------------------
 
@@ -430,10 +435,10 @@ def create_artist_form():
   form = ArtistForm()
   return render_template('forms/new_artist.html', form=form)
 @app.route('/artists/create', methods=['POST'])
-def create_artist_submission():
+def create_artist_submission(form):
   # called upon submitting the new artist listing form
-  try:
-    added_artist=artist(name=form.name.date,
+  added_artist=Artist(
+    name=form.name.date,
     genres=form.genres.data,
     city=form.city.data,
     state=form.state.data,
@@ -444,13 +449,14 @@ def create_artist_submission():
     seeking_description=form.seeking_description.data,
     image_link=form.image_link.data
     )
+  db.session.add(added_artist)
+  db.session.commit()
+
+  
+  
     
-    db.session.add(added_artist)
-    db.session.commit()
-  except:
-    db.session.rollback()
-  finally:
-    db.session.close()
+    
+ 
   # TODO: insert form data as a new Venue record in the db, instead
 
   # TODO: modify data to be the data object returned from db insertion
