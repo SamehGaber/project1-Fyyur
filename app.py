@@ -26,7 +26,7 @@ db = SQLAlchemy(app)
 
 # TODO: connect to a local postgresql database
 migrate = Migrate(app,db) # making an instance of Migrate Class and link it to the app and DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur1'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5432/fyyur'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #----------------------------------------------------------------------------#
@@ -66,7 +66,8 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(200))
     website = db.Column(db.String())
     # the relationship between Show TAble and Artist TAble is one to many
-    shows_art = db.relationship('show', backref='artist')
+    #  shows_art= db.relationship('show', backref='artist')
+    shows_art = db.relationship("Show", backref="artist")
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
@@ -76,7 +77,6 @@ class Show(db.Model):
   start_time = db.Column(db.String(), nullable=False)
 
 
- 
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
@@ -245,7 +245,24 @@ def create_venue_form():
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
+  form = VenueForm()
+  added_venue=Venue(
+    name=form.name.data,
+    genres=form.genres.data,
+    city=form.city.data,
+    state=form.state.data,
+    phone=form.phone.data,
+    address= form.address.data,
+    # website=form.website.data,
+    facebook_link=form.facebook_link.data,
+    #seeking_venue=form.seeking_venue.data,
+    #seeking_description=form.seeking_description.data,
+    image_link=form.image_link.data
+    )
+  db.session.add(added_venue)
+  db.session.commit()
   # TODO: modify data to be the data object returned from db insertion
+
 
   # on successful db insert, flash success
   flash('Venue ' + request.form['name'] + ' was successfully listed!')
@@ -435,18 +452,19 @@ def create_artist_form():
   form = ArtistForm()
   return render_template('forms/new_artist.html', form=form)
 @app.route('/artists/create', methods=['POST'])
-def create_artist_submission(form):
+def create_artist_submission():
   # called upon submitting the new artist listing form
+  form = ArtistForm()
   added_artist=Artist(
-    name=form.name.date,
+    name=form.name.data,
     genres=form.genres.data,
     city=form.city.data,
     state=form.state.data,
     phone=form.phone.data,
-    website=form.website.data,
+    # website=form.website.data,
     facebook_link=form.facebook_link.data,
-    seeking_venue=form.seeking_venue.data,
-    seeking_description=form.seeking_description.data,
+    #seeking_venue=form.seeking_venue.data,
+    #seeking_description=form.seeking_description.data,
     image_link=form.image_link.data
     )
   db.session.add(added_artist)
